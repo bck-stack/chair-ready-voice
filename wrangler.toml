@@ -1,0 +1,13 @@
+name = "chair-ready-voice"
+account_id = "8782fc2a0c9c441983ce9cde2529959e"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chair-ready-voice"
+database_id = "e217ce82-739a-4834-a37e-64c9b831eea2"
