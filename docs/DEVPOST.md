@@ -2,8 +2,8 @@
 
 **Voice booking for one-person businesses, through Alexa+. The owner keeps cutting; the assistant runs the diary.**
 
-- Live simulator: https://chair-ready-voice.sitecheck-api.workers.dev
-- MCP endpoint (Streamable HTTP, spec 2025-11-25): https://chair-ready-voice.sitecheck-api.workers.dev/mcp
+- Live simulator: https://chair-ready-voice.fadeandco.workers.dev
+- MCP endpoint (Streamable HTTP, spec 2025-11-25): https://chair-ready-voice.fadeandco.workers.dev/mcp
 - Agent Skill: `skills/book-appointment/SKILL.md`
 
 ---

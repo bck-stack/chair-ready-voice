@@ -6,8 +6,8 @@ Demo business: **Fade & Co.**, a one-chair barbershop at 214 Kingsland Road, Dal
 
 With Chair Ready Voice, a customer just says *"Alexa, can I get a skin fade at Fade & Co. tomorrow afternoon?"* — the assistant checks the real diary, offers free times, books, texts a confirmation, handles reschedules and cancellations, and fills cancelled slots from the waitlist. Marcus gets a heads-up, nothing to do.
 
-- **Live simulator:** https://chair-ready-voice.sitecheck-api.workers.dev
-- **MCP endpoint (Streamable HTTP, spec 2025-11-25):** `https://chair-ready-voice.sitecheck-api.workers.dev/mcp`
+- **Live simulator:** https://chair-ready-voice.fadeandco.workers.dev
+- **MCP endpoint (Streamable HTTP, spec 2025-11-25):** `https://chair-ready-voice.fadeandco.workers.dev/mcp`
 - **Agent Skill:** [`skills/book-appointment/SKILL.md`](skills/book-appointment/SKILL.md) — the same flow packaged as an open-standard Agent Skill
 - **Submission docs:** [Devpost write-up](docs/DEVPOST.md) · [Friction log](docs/FRICTION-LOG.md) · [Video script](docs/VIDEO-SCRIPT.md)
 
@@ -72,7 +72,7 @@ The server also offers a **resource**, `business://fade-and-co/info` (services, 
 ```json
 {
   "mcpServers": {
-    "chair-ready-voice": { "type": "http", "url": "https://chair-ready-voice.sitecheck-api.workers.dev/mcp" }
+    "chair-ready-voice": { "type": "http", "url": "https://chair-ready-voice.fadeandco.workers.dev/mcp" }
   }
 }
 ```

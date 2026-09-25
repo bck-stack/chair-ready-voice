@@ -1,6 +1,6 @@
 # Demo video script — 2:45
 
-**Format:** screen recording of the live simulator (https://chair-ready-voice.sitecheck-api.workers.dev) at 1920×1080, with a few seconds of b-roll at the start. Voice-over recorded separately. Customer lines are spoken into the simulator (or typed if the mic picks up noise) — keep them word for word so the tool calls match.
+**Format:** screen recording of the live simulator (https://chair-ready-voice.fadeandco.workers.dev) at 1920×1080, with a few seconds of b-roll at the start. Voice-over recorded separately. Customer lines are spoken into the simulator (or typed if the mic picks up noise) — keep them word for word so the tool calls match.
 
 **Before recording:**
 - `POST /api/reset` to load fresh demo data. The seed puts a full Saturday with two people on its waitlist (Tunde and Callum).

@@ -2,7 +2,7 @@
 // Usage: node test/mcp-client.mjs [https://<your-worker>/mcp]   (the offline suite is `npm test`)
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-const URL_ = process.argv[2] || "https://chair-ready-voice.sitecheck-api.workers.dev/mcp";
+const URL_ = process.argv[2] || "https://chair-ready-voice.fadeandco.workers.dev/mcp";
 const client = new Client({ name: "smoke-test", version: "1.0.0" });
 await client.connect(new StreamableHTTPClientTransport(new URL(URL_)));
 const caps = client.getServerCapabilities();
