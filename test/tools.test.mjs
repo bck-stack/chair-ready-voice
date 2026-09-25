@@ -69,3 +69,12 @@ test("business defaults to fade-and-co and valid calls go through", async () => 
   assert.equal(r.times[0], "10:45");
   await assert.rejects(runTool(db, "get_business_info", { business: "nope" }), /Unknown business/);
 });
+
+test("placeholder or invented customer details are rejected, so the agent has to ask", async () => {
+  const base = { date: "2026-10-10" };
+  for (const [customer, phone] of [["unknown", "07700 900555"], ["John Doe", "07700 900555"], ["Jordan Lee", "unknown"], ["Jordan Lee", "07123456789"], ["Jordan Lee", "12345"]]) {
+    await assert.rejects(runTool(db, "join_waitlist", { ...base, customer, phone }), /Invalid arguments/, `${customer} / ${phone}`);
+  }
+  const ok = await runTool(db, "join_waitlist", { ...base, customer: "Jordan Lee", phone: "07700 900555" });
+  assert.equal(ok.on_waitlist, true);
+});

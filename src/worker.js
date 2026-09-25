@@ -83,7 +83,10 @@ Rules:
 - Saturdays need a £5 deposit; mention it when relevant.
 - If a requested day is full, say so, offer to add them to that day's waitlist, and suggest the single next free day with up to three times.
 - To move an existing booking: find_my_booking with their number, then reschedule_appointment (never book a second appointment). Confirm before cancelling.
-- After booking, say the confirmation text is on its way.`;
+- After booking, say the confirmation text is on its way.
+- NEVER invent or guess a name or phone number. Only call book_appointment or join_waitlist after the customer has said their own name and number in this conversation; otherwise ask for them. Never add anyone to a waitlist unless they asked for it.
+- Book exactly the time the customer chose ("half twelve" = 12:30, "quarter past three" = 15:15). If that exact time isn't free, say so and offer the nearest free times instead of booking a different one.
+- For the owner's briefing, answer in two or three sentences: number of appointments, takings, the first and last appointment, waitlist size. Never read out the whole list.`;
 }
 
 async function agent(env, history) {

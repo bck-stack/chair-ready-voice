@@ -7,7 +7,12 @@ const realDate = (s) => { const d = new Date(s + "T12:00:00Z"); return !isNaN(d)
 const date = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/).refine(realDate, "not a real calendar date")
   .describe("Date as YYYY-MM-DD in the business's local timezone.");
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).describe("Start time as HH:MM (24h), must be one of the free times.");
-const phone = z.string().min(6).describe("Customer's mobile number.");
+const PLACEHOLDER = /^(unknown|n\/?a|none|null|test|customer|john doe|jane doe|john smith)$/i;
+const phone = z.string().refine((v) => v.replace(/\D/g, "").length >= 10 && !/^0?7123456789$|^0+$|123456789/.test(v.replace(/\D/g, "")), {
+  message: "ask the customer for their real mobile number (at least 10 digits) — never invent one",
+}).describe("Customer's mobile number exactly as they said it.");
+const person = z.string().trim().min(2).refine((v) => !PLACEHOLDER.test(v), { message: "ask the customer for their name — never use a placeholder" })
+  .describe("Customer's full name exactly as they said it.");
 
 // Output shapes (MCP outputSchema). Tools that return a list are wrapped as { items: [...] } in structuredContent.
 const spokenDay = z.string().describe('Date as it should be said aloud, e.g. "Saturday 10 October".');
@@ -91,7 +96,7 @@ export const TOOLS = [
     name: "book_appointment",
     title: "Book an appointment",
     description: "Books a free time and sends the customer a confirmation. Only call after the customer has chosen a time AND given their name and mobile number. Returns deposit if the day requires one.",
-    input: { business: biz, service: z.string(), date, time, customer: z.string().min(2).describe("Customer's full name."), phone },
+    input: { business: biz, service: z.string(), date, time, customer: person, phone },
     output: out.booked,
     run: (db, a) => E.book(db, a.business, a),
   },
@@ -125,7 +130,7 @@ export const TOOLS = [
     name: "join_waitlist",
     title: "Join the waitlist",
     description: "Adds the customer to the waitlist for a full day. They get a message the moment a slot opens.",
-    input: { business: biz, date, customer: z.string().min(2), phone },
+    input: { business: biz, date, customer: person, phone },
     output: out.waitlist,
     run: (db, a) => E.joinWaitlist(db, a.business, a),
   },
