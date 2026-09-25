@@ -8,6 +8,7 @@ With Chair Ready Voice, a customer just says *"Alexa, can I get a skin fade at F
 
 - **Live simulator:** https://chair-ready-voice.sitecheck-api.workers.dev
 - **MCP endpoint (Streamable HTTP, spec 2025-11-25):** `https://chair-ready-voice.sitecheck-api.workers.dev/mcp`
+- **Agent Skill:** [`skills/book-appointment/SKILL.md`](skills/book-appointment/SKILL.md) — the same flow packaged as an open-standard Agent Skill
 
 ## Tools
 
