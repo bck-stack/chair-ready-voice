@@ -89,6 +89,14 @@ Rules:
 - For the owner's briefing, answer in two or three sentences: number of appointments, takings, the first and last appointment, waitlist size. Never read out the whole list.`;
 }
 
+function confirmedCancel(history) {
+  const lastUser = [...history].reverse().find((m) => m.role === "user")?.content || "";
+  const lastAssistant = [...history].reverse().find((m) => m.role === "assistant")?.content || "";
+  const asked = /cancel/i.test(lastAssistant) && /\?/.test(lastAssistant);
+  const yes = /\b(yes|yeah|yep|yup|sure|please do|go ahead|confirm|do it|cancel it)\b/i.test(lastUser) && !/\b(no|don't|do not|keep it)\b/i.test(lastUser);
+  return asked && yes;
+}
+
 async function agent(env, history) {
   const n = localNow("Europe/London");
   const now = { ...n, day: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][n.dow] };
@@ -102,7 +110,13 @@ async function agent(env, history) {
     messages.push({ role: "assistant", content: "", tool_calls: calls.map((c, i) => ({ id: `call_${step}_${i}`, type: "function", function: { name: c.name, arguments: JSON.stringify(c.arguments || {}) } })) });
     for (const [i, c] of calls.entries()) {
       let result;
-      try { result = await runTool(env.DB, c.name, c.arguments); }
+      try {
+        // Destructive action guard: the assistant must have asked, and the customer must have said yes.
+        if (c.name === "cancel_appointment" && !confirmedCancel(history)) {
+          throw new Error("Not confirmed yet. Read the booking back to the customer and ask whether to cancel it; call cancel_appointment only after they say yes.");
+        }
+        result = await runTool(env.DB, c.name, c.arguments);
+      }
       catch (e) { result = { error: e.message }; }
       trace.push({ tool: c.name, args: c.arguments, result });
       messages.push({ role: "tool", tool_call_id: `call_${step}_${i}`, name: c.name, content: JSON.stringify(result) });
