@@ -83,7 +83,7 @@ test("a full booking flow returns structuredContent that matches each outputSche
   const moved = await call("reschedule_appointment", { booking_id: b.booking_id, phone: "07700 900999", date: "2026-10-08", time: "12:30" });
   const wl = await call("join_waitlist", { date: "2026-10-10", customer: "Test Client", phone: "07700 900999" });
   assert.equal(wl.position, 3);
-  const c = await call("cancel_appointment", { booking_id: moved.new_booking_id, phone: "07700 900999" });
+  const c = await call("cancel_appointment", { booking_id: moved.new_booking_id, phone: "07700 900999", customer_confirmed: true });
   assert.equal(c.cancelled, true);
   const brief = await call("owner_daily_briefing", { date: "2026-10-08" });
   assert.equal(brief.appointments, 5);

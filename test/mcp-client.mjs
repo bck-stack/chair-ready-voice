@@ -20,6 +20,6 @@ const next = await call("next_available", { service: "skin fade" });
 const d = next.items[0];
 const b = await call("book_appointment", { service: "skin fade", date: d.date, time: d.first_times[0], customer: "Test Client", phone: "07700 900999" });
 await call("find_my_booking", { phone: "07700 900999" });
-await call("cancel_appointment", { booking_id: b.booking_id, phone: "07700 900999" });
+await call("cancel_appointment", { booking_id: b.booking_id, phone: "07700 900999", customer_confirmed: true });
 await call("owner_daily_briefing", {});
 await client.close();

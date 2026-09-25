@@ -78,3 +78,10 @@ test("placeholder or invented customer details are rejected, so the agent has to
   const ok = await runTool(db, "join_waitlist", { ...base, customer: "Jordan Lee", phone: "07700 900555" });
   assert.equal(ok.on_waitlist, true);
 });
+
+test("cancel needs the customer's explicit confirmation; booking_id may arrive as a string", async () => {
+  const b = await runTool(db, "book_appointment", { service: "beard trim", date: "2026-10-08", time: "12:45", customer: "Priya Shah", phone: "07700 900321" });
+  await assert.rejects(runTool(db, "cancel_appointment", { booking_id: b.booking_id, phone: "07700 900321" }), /customer_confirmed/);
+  const c = await runTool(db, "cancel_appointment", { booking_id: String(b.booking_id), phone: "07700 900321", customer_confirmed: true });
+  assert.equal(c.cancelled, true);
+});

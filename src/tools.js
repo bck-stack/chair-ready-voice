@@ -7,6 +7,7 @@ const realDate = (s) => { const d = new Date(s + "T12:00:00Z"); return !isNaN(d)
 const date = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/).refine(realDate, "not a real calendar date")
   .describe("Date as YYYY-MM-DD in the business's local timezone.");
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).describe("Start time as HH:MM (24h), must be one of the free times.");
+const bookingId = z.coerce.number().int().positive().describe("booking_id from find_my_booking.");
 const PLACEHOLDER = /^(unknown|n\/?a|none|null|test|customer|john doe|jane doe|john smith)$/i;
 const phone = z.string().refine((v) => v.replace(/\D/g, "").length >= 10 && !/^0?7123456789$|^0+$|123456789/.test(v.replace(/\D/g, "")), {
   message: "ask the customer for their real mobile number (at least 10 digits) — never invent one",
@@ -113,7 +114,7 @@ export const TOOLS = [
     name: "reschedule_appointment",
     title: "Reschedule",
     description: "Moves an existing booking to a new free date/time. Requires booking_id (from find_my_booking) and the same mobile number.",
-    input: { business: biz, booking_id: z.number().int(), phone, date, time },
+    input: { business: biz, booking_id: bookingId, phone, date, time },
     output: out.moved,
     run: (db, a) => E.reschedule(db, a.business, a),
   },
@@ -121,7 +122,7 @@ export const TOOLS = [
     name: "cancel_appointment",
     title: "Cancel",
     description: "Cancels a booking. The freed slot is automatically offered to everyone on that day's waitlist, and the owner is notified. Confirm with the customer before calling.",
-    input: { business: biz, booking_id: z.number().int(), phone },
+    input: { business: biz, booking_id: bookingId, phone, customer_confirmed: z.literal(true).describe("Set to true only after the customer has said yes to cancelling this specific booking.") },
     output: out.cancelled,
     destructive: true,
     run: (db, a) => E.cancel(db, a.business, a),

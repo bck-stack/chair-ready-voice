@@ -25,7 +25,7 @@ The resource `business://fade-and-co/info` holds services, hours, the deposit ru
 ## Changes
 
 - Reschedule: `find_my_booking` with their mobile number → `reschedule_appointment`. Never create a second booking.
-- Cancel: confirm first, then `cancel_appointment`. The freed slot is offered to that day's waitlist automatically — no need to mention it unless asked.
+- Cancel: read the booking back, ask "shall I cancel it?", and only after a yes call `cancel_appointment` with `customer_confirmed: true`. The freed slot is offered to that day's waitlist automatically — no need to mention it unless asked.
 - Full day: say so, offer `join_waitlist` for that day and the single next free day.
 
 ## Owner
