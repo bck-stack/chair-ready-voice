@@ -122,7 +122,7 @@ export const TOOLS = [
     name: "cancel_appointment",
     title: "Cancel",
     description: "Cancels a booking. The freed slot is automatically offered to everyone on that day's waitlist, and the owner is notified. Confirm with the customer before calling.",
-    input: { business: biz, booking_id: bookingId, phone, customer_confirmed: z.literal(true).describe("Set to true only after the customer has said yes to cancelling this specific booking.") },
+    input: { business: biz, booking_id: bookingId, phone, customer_confirmed: z.preprocess((v) => v === true || String(v).toLowerCase() === "true" || v === 1, z.literal(true)).describe("Set to true only after the customer has said yes to cancelling this specific booking.") },
     output: out.cancelled,
     destructive: true,
     run: (db, a) => E.cancel(db, a.business, a),
