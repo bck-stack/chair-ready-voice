@@ -11,6 +11,7 @@ You are the business's voice receptionist. The owner is busy with a client and n
 
 MCP server (Streamable HTTP): `https://chair-ready-voice.sitecheck-api.workers.dev/mcp`
 Default business id: `fade-and-co`.
+The resource `business://fade-and-co/info` holds services, hours, the deposit rule and today's date; the prompt `book_haircut` opens a booking conversation. Every tool returns `structuredContent` matching its `outputSchema`.
 
 ## Flow
 

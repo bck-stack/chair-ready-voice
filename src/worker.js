@@ -1,7 +1,8 @@
 // Chair Ready Voice — MCP server (Streamable HTTP) + Alexa+ style voice simulator, on Cloudflare Workers.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { TOOLS, jsonSchemas, runTool } from "./tools.js";
+import { TOOLS, jsonSchemas, runTool, structured } from "./tools.js";
 import { BookingError, localNow, recentMessages, ownerBriefing } from "./engine.js";
 import { seed } from "./seed.js";
 import { PAGE } from "./page.js";
@@ -12,21 +13,54 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), { status
 function mcpServer(env) {
   const server = new McpServer(
     { name: "chair-ready-voice", title: "Chair Ready Voice", version: "1.0.0" },
-    { instructions: "Booking tools for small appointment businesses (demo: Fade & Co., a one-chair barbershop in London). Typical flow: get_business_info → find_available_times or next_available → collect name + mobile → book_appointment. Always confirm before cancel_appointment." },
+    { instructions: "Booking tools for small appointment businesses (demo: Fade & Co., a one-chair barbershop in London). Typical flow: get_business_info → find_available_times or next_available → collect name + mobile → book_appointment. Always confirm before cancel_appointment. The resource business://fade-and-co/info has the services, hours and today's date; the prompt book_haircut sets up a voice booking conversation." },
   );
   for (const t of TOOLS) {
     server.registerTool(t.name, {
-      title: t.title, description: t.description, inputSchema: t.input,
+      title: t.title, description: t.description, inputSchema: t.input, outputSchema: t.output,
       annotations: { readOnlyHint: !!t.readOnly, destructiveHint: !!t.destructive, openWorldHint: false },
     }, async (args) => {
       try {
         const out = await t.run(env.DB, args);
-        return { content: [{ type: "text", text: JSON.stringify(out) }], structuredContent: Array.isArray(out) ? { items: out } : out };
+        return { content: [{ type: "text", text: JSON.stringify(out) }], structuredContent: structured(out) };
       } catch (e) {
         return { isError: true, content: [{ type: "text", text: e instanceof BookingError ? e.message : `Error: ${e.message}` }] };
       }
     });
   }
+
+  server.registerResource("fade-and-co-info", "business://fade-and-co/info", {
+    title: "Fade & Co. — services, hours and deposit rules",
+    description: "Everything an assistant needs before offering times: services with length and price, opening hours with breaks, the Saturday deposit, and today's local date and time.",
+    mimeType: "application/json",
+  }, async (uri) => ({
+    contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(await runTool(env.DB, "get_business_info", { business: "fade-and-co" }), null, 2) }],
+  }));
+
+  server.registerPrompt("book_haircut", {
+    title: "Book a haircut by voice",
+    description: "Starts a voice booking at Fade & Co.: the assistant finds a free time, collects name and mobile, and books.",
+    argsSchema: {
+      service: z.string().optional().describe('What they want, e.g. "skin fade", "beard trim".'),
+      when: z.string().optional().describe('When they want it, in their words, e.g. "tomorrow afternoon", "Saturday".'),
+      name: z.string().optional().describe("The customer's name, if already known."),
+    },
+  }, ({ service, when, name }) => ({
+    description: "Voice booking at Fade & Co.",
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: [
+          `I'd like to book ${service ? `a ${service}` : "a haircut"} at Fade & Co.${when ? ` ${when}.` : ""}${name ? ` My name is ${name}.` : ""}`,
+          "",
+          "(Receptionist notes: read business://fade-and-co/info or call get_business_info for services and today's date. Turn relative days into YYYY-MM-DD. " +
+          "Use find_available_times, or next_available if no day is given. Offer at most three times, spoken naturally. Before book_appointment you need service, date, time, full name and mobile number. " +
+          "Mention the £5 deposit on Saturdays. If the day is full, offer join_waitlist and the next free day. Short spoken sentences, no lists, never read out IDs.)",
+        ].join("\n"),
+      },
+    }],
+  }));
   return server;
 }
 
