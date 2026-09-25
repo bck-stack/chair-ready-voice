@@ -42,9 +42,9 @@ export async function services(db, slug) {
 export async function findService(db, slug, name) {
   const all = await services(db, slug);
   const q = String(name || "").toLowerCase().trim();
-  const hit = all.find((s) => s.name.toLowerCase() === q)
+  const hit = q && (all.find((s) => s.name.toLowerCase() === q)
     || all.find((s) => s.name.toLowerCase().includes(q))
-    || all.find((s) => q.split(/\s+/).some((w) => w.length > 3 && s.name.toLowerCase().includes(w)));
+    || all.find((s) => q.split(/\s+/).some((w) => w.length > 3 && s.name.toLowerCase().includes(w))));
   if (!hit) throw new BookingError(`No service called "${name}". Available: ${all.map((s) => s.name).join(", ")}.`);
   return hit;
 }
@@ -54,8 +54,8 @@ function depositFor(b, date) {
   return days.includes(dowOf(date)) ? b.deposit_amount : 0;
 }
 
-/** Free start times for a service on a date (15-minute grid). */
-export async function freeTimes(db, slug, date, serviceName) {
+/** Free start times for a service on a date (15-minute grid). `ignoreBooking` lets a reschedule overlap its own old slot. */
+export async function freeTimes(db, slug, date, serviceName, ignoreBooking = null) {
   const b = await business(db, slug);
   const svc = await findService(db, slug, serviceName);
   const h = await db.prepare("SELECT * FROM hours WHERE business = ? AND dow = ?").bind(slug, dowOf(date)).first();
@@ -64,18 +64,21 @@ export async function freeTimes(db, slug, date, serviceName) {
   const now = localNow(b.timezone);
   if (date < now.date) return { ...base, open: false, times: [], note: "That date is in the past." };
   const { results: taken } = await db.prepare(
-    "SELECT start, end FROM bookings WHERE business = ? AND status = 'booked' AND substr(start,1,10) = ?",
+    "SELECT id, start, end FROM bookings WHERE business = ? AND status = 'booked' AND substr(start,1,10) = ?",
   ).bind(slug, date).all();
-  const busy = taken.map((t) => [toMin(t.start.slice(11)), toMin(t.end.slice(11))]);
+  const busy = taken.filter((t) => t.id !== ignoreBooking).map((t) => [toMin(t.start.slice(11)), toMin(t.end.slice(11))]);
   if (h.break_start) busy.push([toMin(h.break_start), toMin(h.break_end)]);
   const earliest = date === now.date ? Math.ceil((toMin(now.time) + 30) / 15) * 15 : 0;
   const times = [];
+  let later = false;
   for (let t = toMin(h.open); t + svc.minutes <= toMin(h.close); t += 15) {
     if (t < earliest) continue;
+    later = true;
     if (busy.some(([s, e]) => t < e && t + svc.minutes > s)) continue;
     times.push(toHHMM(t));
   }
-  return { ...base, open: true, times, note: times.length ? null : "Fully booked — the waitlist is open." };
+  const note = times.length ? null : later ? "Fully booked — the waitlist is open." : "There are no more free times today.";
+  return { ...base, open: true, times, note };
 }
 
 /** Next days with availability, for "when's your next free slot?" */
@@ -94,13 +97,16 @@ async function log(db, slug, recipient, kind, body) {
   await db.prepare("INSERT INTO messages (business, recipient, kind, body) VALUES (?, ?, ?, ?)").bind(slug, recipient, kind, body).run();
 }
 
-export async function book(db, slug, { service, date, time, customer, phone, source = "voice" }) {
+/** The n free times nearest to the requested one, in time order. */
+const nearest = (times, time, n) => [...times].sort((a, b) => Math.abs(toMin(a) - toMin(time)) - Math.abs(toMin(b) - toMin(time))).slice(0, n).sort();
+
+export async function book(db, slug, { service, date, time, customer, phone, source = "voice", replacing = null }) {
   const b = await business(db, slug);
   if (!customer || !phone) throw new BookingError("I need the customer's name and mobile number to book.");
-  const avail = await freeTimes(db, slug, date, service);
+  const avail = await freeTimes(db, slug, date, service, replacing);
   if (!avail.times.includes(time)) {
     throw new BookingError(avail.times.length
-      ? `${time} isn't free on ${avail.day}. Closest free times: ${avail.times.slice(0, 5).join(", ")}.`
+      ? `${time} isn't free on ${avail.day}. Closest free times: ${nearest(avail.times, time, 5).join(", ")}.`
       : `${avail.day} has no free times for a ${avail.service}. ${avail.note || ""}`);
   }
   const svc = await findService(db, slug, service);
@@ -154,7 +160,7 @@ export async function cancel(db, slug, { booking_id, phone }) {
 
 export async function reschedule(db, slug, { booking_id, phone, date, time }) {
   const bk = await ownBooking(db, slug, booking_id, phone);
-  const nb = await book(db, slug, { service: bk.service, date, time, customer: bk.customer, phone: bk.phone, source: "voice-reschedule" });
+  const nb = await book(db, slug, { service: bk.service, date, time, customer: bk.customer, phone: bk.phone, source: "voice-reschedule", replacing: bk.id });
   await cancel(db, slug, { booking_id: bk.id, phone });
   return { rescheduled: true, from: `${spoken(bk.start.slice(0, 10))} ${bk.start.slice(11)}`, to: `${nb.day} ${nb.time}`, new_booking_id: nb.booking_id, service: nb.service };
 }
@@ -162,8 +168,11 @@ export async function reschedule(db, slug, { booking_id, phone, date, time }) {
 export async function joinWaitlist(db, slug, { date, customer, phone }) {
   const b = await business(db, slug);
   if (!customer || !phone) throw new BookingError("I need a name and mobile number for the waitlist.");
+  const { results: queue } = await db.prepare("SELECT phone FROM waitlist WHERE business = ? AND day = ? ORDER BY created_at, id").bind(slug, date).all();
+  const already = queue.findIndex((w) => norm(w.phone) === norm(phone));
+  if (already >= 0) return { on_waitlist: true, day: spoken(date), position: already + 1, already_on_list: true };
   await db.prepare("INSERT INTO waitlist (business, day, customer, phone) VALUES (?, ?, ?, ?)").bind(slug, date, customer, phone).run();
-  const { count } = await db.prepare("SELECT COUNT(*) count FROM waitlist WHERE business = ? AND day = ?").bind(slug, date).first();
+  const count = queue.length + 1;
   await log(db, slug, `${customer} · ${phone}`, "waitlist_join", `You're on the waitlist for ${spoken(date)} at ${b.name}. If a slot opens we'll text you first. — ${b.owner}`);
   return { on_waitlist: true, day: spoken(date), position: count };
 }
