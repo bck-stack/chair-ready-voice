@@ -2,7 +2,7 @@
 
 **An MCP server that lets Alexa+ (or any AI agent) book appointments for one-person businesses — so the owner never has to pick up the phone.**
 
-Demo business: **Fade & Co.**, a one-chair barbershop at 214 Kingsland Road, Dalston, London. Marcus works alone. Around 40 booking messages a day arrive while he's holding clippers; by the time he replies, customers have booked elsewhere, and one in five Saturday chairs is a no-show.
+Demo business: **Fade & Co.**, a fictional one-chair barbershop in Dalston, London (demo data; the address is made up). Marcus works alone. Around 40 booking messages a day arrive while he's holding clippers; by the time he replies, customers have booked elsewhere, and one in five Saturday chairs is a no-show.
 
 With Chair Ready Voice, a customer just says *"Alexa, can I get a skin fade at Fade & Co. tomorrow afternoon?"* — the assistant checks the real diary, offers free times, books, texts a confirmation, handles reschedules and cancellations, and fills cancelled slots from the waitlist. Marcus gets a heads-up, nothing to do.
 

@@ -10,7 +10,7 @@
 
 ## Inspiration
 
-Our demo shop is Fade & Co., a one-chair barbershop on Kingsland Road in Dalston, London. Marcus runs it alone. He is the barber, the receptionist, the cleaner and the accountant.
+Our demo shop is Fade & Co., a fictional one-chair barbershop in Dalston, London (demo data). Marcus runs it alone. He is the barber, the receptionist, the cleaner and the accountant.
 
 His bookings arrive the way they do for most small shops: Instagram DMs, WhatsApp, texts, the odd phone call. On a normal day that's around 40 messages, and almost all of them land while he has clippers in his hand. He can't stop a skin fade halfway through to reply to "any chance of 4 o'clock?", so the reply goes out an hour later — by which point the customer has booked somewhere else.
 

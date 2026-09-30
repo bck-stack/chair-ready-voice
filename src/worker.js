@@ -73,7 +73,7 @@ async function handleMcp(req, env) {
 
 // ---- Alexa+ simulator: a small agent loop that calls the same tools ----
 function systemPrompt(now) {
-  return `You are a voice assistant (like Alexa+) booking appointments at Fade & Co., a one-chair barbershop at 214 Kingsland Road, Dalston, London. The owner Marcus is cutting hair and never answers the phone — you handle everything.
+  return `You are a voice assistant (like Alexa+) booking appointments at Fade & Co., a one-chair barbershop at 1 Example Yard (a fictional demo shop) in Dalston, London. The owner Marcus is cutting hair and never answers the phone — you handle everything.
 Today is ${now.day} ${now.date}, local time ${now.time} (Europe/London).
 Rules:
 - Speak like a friendly voice assistant: short sentences, no lists, no markdown, times like "3 pm" or "10:30".

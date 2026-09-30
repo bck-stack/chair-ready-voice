@@ -9,7 +9,7 @@ export async function seed(db) {
   await db.prepare("DELETE FROM sqlite_sequence").run().catch(() => {});
 
   await db.prepare(`INSERT INTO businesses (slug, name, kind, address, timezone, owner, deposit_days, deposit_amount)
-    VALUES ('fade-and-co', 'Fade & Co.', 'barbershop (one chair)', '214 Kingsland Road, Dalston, London', 'Europe/London', 'Marcus', '6', 5)`).run();
+    VALUES ('fade-and-co', 'Fade & Co.', 'barbershop (one chair)', '1 Example Yard, Dalston, London (fictional demo shop)', 'Europe/London', 'Marcus', '6', 5)`).run();
   const svc = [["Skin Fade", 45, 28], ["Classic Cut", 30, 22], ["Beard Trim & Shape", 20, 14], ["Cut + Beard", 60, 38], ["Kids Cut (under 12)", 30, 16]];
   for (const [n, m, p] of svc) await db.prepare("INSERT INTO services (business, name, minutes, price) VALUES ('fade-and-co', ?, ?, ?)").bind(n, m, p).run();
   const hours = [[0, null, null], [1, null, null], [2, "10:00", "19:00"], [3, "10:00", "19:00"], [4, "10:00", "19:00"], [5, "10:00", "19:00"], [6, "09:00", "17:00"]];
